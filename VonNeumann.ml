@@ -1,7 +1,7 @@
 (*Addition du vecteur b au vecteur a*)
 
 let add a b =
-let n = vect_length a in
+let n = Array.length a in
 for k = 0 to n-1 do
 a.(k) <- a.(k) +. b.(k)
 done;;
@@ -9,7 +9,7 @@ done;;
 (*Multiplication du vecteur a par lambda*)
 
 let mult_vecteur lambda a =
-let n = vect_length a - 1 in
+let n = Array.length a - 1 in
   for k = 0 to n do
     a.(k) <- lambda *. a.(k)
   done
@@ -18,22 +18,22 @@ let n = vect_length a - 1 in
 (*Produit scalaire canonique de a et b*)
 
 let scal a b =
-let N = vect_length b in
+let bigN = Array.length b in
 let s = ref 0. in
-for k = 0 to N-1 do
+for k = 0 to bigN-1 do
 s:= !s +. (a.(k))*.(b.(k))
 done;
 !s;;
 
 (*Multiplication matricielle*)
 
-let mult T x =
-let p = vect_length T - 1 and n = vect_length T.(0) - 1 in
-let v = make_vect p 0. in
+let mult bigT x =
+let p = Array.length bigT - 1 and n = Array.length bigT.(0) - 1 in
+let v = Array.make p 0. in
   for k = 0 to n do
     let c = ref 0. in
       for i= 0 to p do
-        c := !c +. T.(i).(k) *. x.(i)
+        c := !c +. bigT.(i).(k) *. x.(i)
       done ;
     v.(k) <- !c ;
   done ;
@@ -41,56 +41,54 @@ v ;;
 
 (*e_i*)
 
-let base T i =
-let n = vect_length T in
-let v = make_vect n 0. in
+let base bigT i =
+let n = Array.length bigT in
+let v = Array.make n 0. in
 v.(i) <- 1. ; v ;;
 
-(*(Tx|Te_i)*)
+(*(bigTx|bigTe_i)*)
 
-let B T x i = scal (mult T x) T.(i) ;;
+let bigB bigT x i = scal (mult bigT x) bigT.(i) ;;
 
 (*q(x)*)
 
-let q T x = scal (mult T x) (mult T x) ;;
+let q bigT x = scal (mult bigT x) (mult bigT x) ;;
 
-(*minimum de B x e_i pour i*)
+(*minimum de bigB x e_i pour i*)
 
-let miniB T x =
-let p = vect_length T -1 in
+let minibigB bigT x =
+let p = Array.length bigT -1 in
 let j = ref 0 in
   for k = 0 to p do
-    if B T x k < B T x !j then j:=k
+    if bigB bigT x k < bigB bigT x !j then j:=k
   done ;
 !j ;;
 
-(*Teste si un vecteur est solution*)
+(*bigTeste si un vecteur est solution*)
 
-let test_solution T x =
-let p = vect_length T - 1 in
+let test_solution bigT x =
+let p = Array.length bigT - 1 in
 let bool = ref true in
 for k = 0 to p do
-bool := (!bool)&&((B T x k) > 0.)
+bool := (!bool)&&((bigB bigT x k) > 0.)
 done ; !bool ;;
 
-exception classifiable ;;
+(*Algorithme de Von Neumann. Renvoie la nieme itération de l'algorithme et ||bigTx_n||*)
 
-(*Algorithme de Von Neumann. Renvoie la nieme itération de l'algorithme et ||Tx_n||*)
-
-let algorithme_von_neumann T n =
-  let rec aux T x n = match n with
-  |0 -> (x, sqrt(q T x))
-  |n -> let j = miniB T x in
-      let a = (q T x) -. (B T x j) in
-      let b = (q T x) +. sqrt(scal T.(j) T.(j)) -. 2. *. (B T x j) in
+let algorithme_von_neumann bigT n =
+  let rec aux bigT x n = match n with
+  |0 -> (x, sqrt(q bigT x))
+  |n -> let j = minibigB bigT x in
+      let a = (q bigT x) -. (bigB bigT x j) in
+      let b = (q bigT x) +. sqrt(scal bigT.(j) bigT.(j)) -. 2. *. (bigB bigT x j) in
       let lambda = a /. b in
-      let v = base T j in
+      let v = base bigT j in
       mult_vecteur (1. -. lambda) x ;
       mult_vecteur lambda v ;
       add x v ;
-      if test_solution T x then raise classifiable else aux T x (n-1)
-in let v = base T 1 in
-aux T v n ;;
+      if test_solution bigT x then raise (Failure "inclassifiable") else aux bigT x (n-1)
+in let v = base bigT 1 in
+aux bigT v n ;;
 
 
 
