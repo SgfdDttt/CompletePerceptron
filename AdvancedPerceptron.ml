@@ -1,85 +1,34 @@
-(*Copie conforme d'un tableau*)
+open LinearAlgebra;;
 
-let copie t =
-let n = Array.length t in
-let u = Array.make n t.(0) in
-  for k = 0 to n-1 do
-    u.(k) <- t.(k)
-  done ;
-u ;;
 
-(*Addition en place du vecteur b au vecteur a*)
-let add a b =
-let n = Array.length a in
-for k = 0 to n-1 do
-a.(k) <- a.(k) +. b.(k)
-done;;
+(*runs the perceptron for n interations on matrix tt, keeping in memory the best solution found so far and its margin.*)
+(*the data are the columns of tt, with an extra entry at the bottom equal to 1, and the whole vector multiplied by 1 or -1 depending on the class it belongs to*)
+(*if at some point, the weight vector is 0, then there is no solution (Gordan Theorem)*)
 
-(*Produit scalaire canonique de a et b*)
-
-let scal a b =
-let bigN = Array.length b in
-let s = ref 0. in
-for k = 0 to bigN-1 do
-s:= !s +. (a.(k))*.(b.(k))
-done;
-!s;;
-
-(*bigNormalisation du vecteur x*)
-
-let normalisation x =
-let bigN = Array.length x in
-let s = ref 0. in
-for k = 0 to bigN-1 do
-s:= !s +. (x.(k))*.(x.(k))
-done;
-s := sqrt (!s) ;
-for k = 0 to bigN-1 do
-x.(k) <- x.(k)/.(!s)
-done ;;
-
-(*bigTeste si u est le vecteur nul*)
-
-let test_nul u =
-let n = Array.length u - 1 in
-let bool = ref true in
-for k = 0 to n do
-bool := (!bool)&&(u.(k) = 0.)
-done ;
-!bool;;
-
-(*bigT.(k) désigne la kieme colonne de bigT. Recherche du plus petit produit scalaire*)
-
-let miniscal bigT w =
-let p = Array.length bigT - 1 in
-let k = ref 0 in
-for i = 0 to p do
-if scal bigT.(i) w < scal bigT.(!k) w then k:=i done;
-!k ;;
-
-(*Marge d'un vecteur*)
-
-let marge bigT w =
-let j = miniscal bigT w and bigN = sqrt(scal w w) in (scal bigT.(j) w)/.bigN ;;
-
-(*Cet algorithme renvoie le résultat de n itérations du perceptron avec la marge obtenue, en gardant en mémoire la meilleure solution rencontrée jusque là. Si le vecteur solution passe par 0, c'est inclassifiable d'après Gordan.*)
-
-let perceptron_avance bigT n =
-  let rec aux y a bigT x n = match n with
-  |0 -> (y, a)
+let advanced_perceptron tt n =
+  let rec aux best_weight_vector best_margin tt current_weight_vector remaining_iterations = match remaining_iterations with
+  |0 -> normalisation best_weight_vector; (best_weight_vector, best_margin)
   |n ->
-      let j = miniscal bigT x in
-      add x bigT.(j) ;
-      if test_nul x
-      then raise (Failure "inclassifiable")
+      let j = mini_scal tt current_weight_vector in
+      add current_weight_vector tt.(j) ;
+      if all_zero current_weight_vector
+      then raise (Failure "No solution")
       else
       begin
-      if a < marge bigT x
-      then let z = copie x in normalisation z ; aux z (marge bigT z) bigT x (n-1) else aux y a bigT x (n-1)
-      end ;
-in let bigN = Array.length bigT.(0) in
-let w = Array.make bigN 0. in
-w.(0) <- 1. ; aux w (marge bigT w) bigT w n ;;
+      if best_margin < margin tt current_weight_vector
+      then let new_best = copy current_weight_vector in
+			         normalisation current_weight_vector ;
+	             aux new_best (margin tt new_best) tt current_weight_vector (remaining_iterations-1);
+		  else aux best_weight_vector best_margin tt current_weight_vector (remaining_iterations-1)
+   end ;
+	in
+	let w = Array.make (Array.length tt.(0)) 1. in
+  normalisation w;
+  aux w (margin tt w) tt w n;;
 
-
-
+let tt = [|[| -1. ; 1. ; 1.|] ; [|1. ; -1. ; -1.|]|] in let w, a = advanced_perceptron tt 5 in print_float a; print_string "\n";
+for kk=0 to Array.length w - 1 do
+	print_float w.(kk);
+	print_string " ; ";
+done;
+;;
