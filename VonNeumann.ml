@@ -1,37 +1,38 @@
 open LinearAlgebra;;
 
-(*minimum de bigB x e_i pour i*)
-
-let minibigB bigT x =
-let p = Array.length bigT -1 in
+(*minimum of (Bx | e_i) over i*)
+let mini_index tt x =
+let p = (Array.length tt) - 1 in
 let j = ref 0 in
   for k = 0 to p do
-    if bigB bigT x k < bigB bigT x !j then j:=k
+    if bilin_prod tt x k < bilin_prod tt x !j then j := k
   done ;
 !j ;;
 
-(*bigTeste si un vecteur est solution*)
-
-let test_solution bigT x =
-let p = Array.length bigT - 1 in
+(*checks if a weight vector is a solution to the perceptron problem*)
+let test_solution tt x =
+let p = Array.length tt - 1 in
 let bool = ref true in
 for k = 0 to p do
-bool := (!bool)&&((bigB bigT x k) > 0.)
+bool := (!bool)&&((scal tt.(k) x) > 0.)
 done ; !bool ;;
 
-(*Algorithme de Von Neumann. Renvoie la nieme itération de l'algorithme et ||bigTx_n||*)
-
-let algorithme_von_neumann bigT n =
-  let rec aux bigT x n = match n with
-  |0 -> (x, sqrt(q bigT x))
-  |n -> let j = minibigB bigT x in
-      let a = (q bigT x) -. (bigB bigT x j) in
-      let b = (q bigT x) +. sqrt(scal bigT.(j) bigT.(j)) -. 2. *. (bigB bigT x j) in
+(*Von Neumann algorithm. Returns the n-th iteration and the minimum value attained.*)
+let algorithme_von_neumann tt n =
+  let rec aux matrix current_solution n =
+		match n with
+  |0 -> (current_solution, sqrt(quad_prod matrix current_solution))
+  |n -> let j = mini_index matrix current_solution in
+      let a = (quad_prod matrix current_solution) -. (bilin_prod matrix current_solution j) in
+      let b = (quad_prod matrix current_solution) +. sqrt(scal matrix.(j) matrix.(j)) -. 2. *. (bilin_prod matrix current_solution j) in
       let lambda = a /. b in
-      let v = base bigT j in
-      scal_mult (1. -. lambda) x ;
-      scal_mult lambda v ;
-      add x v ;
-      if test_solution bigT x then raise (Failure "classifiable") else aux bigT x (n-1)
-in let v = base bigT 1 in
-aux bigT v n ;;
+      let column_j = base matrix j in
+      scal_mult (1. -. lambda) current_solution ;
+      scal_mult lambda column_j ;
+      add current_solution column_j ;
+      if test_solution matrix current_solution then
+				  raise (Failure "no solution")
+				else
+					aux matrix current_solution (n-1)
+in let v = base tt 1 in
+aux tt v n ;;
