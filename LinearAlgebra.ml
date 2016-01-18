@@ -1,3 +1,5 @@
+open Printf;;
+
 (*copy a vector*)
 let copy t =
 let n = Array.length t in
@@ -6,6 +8,12 @@ let u = Array.make n t.(0) in
     u.(k) <- t.(k)
   done ;
 u ;;
+
+(*print an array - that's not algebra but still useful*) 
+let print_array a =
+  let print_with_semicolon x = print_float x; print_string "; ";
+	in Array.iter (print_with_semicolon) a; print_string "\n";
+;;
 
 (*add vector b to vector a, in place*)
 let add a b =
@@ -94,96 +102,96 @@ let quad_prod tt x =
 (*Gaussian pivot, solving matrix equation A*X = B*)
 
 (*elementary operation of Gaussian pivot*)
-(* substracting b times the line i to the line j*)
+(*substracting b times the line i from the line j*)
 let elementary_operation aa xx i j b =
-let p = Array.length aa in
-  for k = 0 to p-1 do
-    aa.(k).(j) <- aa.(k).(j) -. b*.aa.(k).(i)
-  done ;
-xx.(j) <- xx.(j) -. b*.xx.(i) ;
+  let p = Array.length aa in
+    for k = 0 to p-1 do
+      aa.(k).(j) <- aa.(k).(j) -. b*.aa.(k).(i)
+    done ;
+  xx.(j) <- xx.(j) -. b*.xx.(i) ;
 ;;
 
 (*Exchanging 2 lines in the system*)
-let element_switch bigA i j k =
-let mem = bigA.(k).(i) in
-bigA.(k).(i) <- bigA.(k).(j) ;
-bigA.(k).(j) <- mem ;
+let element_switch aa i j k =
+  let mem = aa.(k).(i) in
+  aa.(k).(i) <- aa.(k).(j) ;
+  aa.(k).(j) <- mem ;
 ;;
 
-let line_switch bigA bigX i j =
-let mem = bigX.(i) in
-bigX.(i) <- bigX.(j) ;
-bigX.(j) <- mem ;
-let p = Array.length bigA in
-  for k = 0 to p-1 do
-   element_switch bigA i j k
-  done ;
+let line_switch aa x i j =
+  let mem = x.(i) in
+  x.(i) <- x.(j) ;
+  x.(j) <- mem ;
+  let p = Array.length aa in
+    for k = 0 to p-1 do
+      element_switch aa i j k
+    done ;
 ;;
 
-(*Solving A*X = B when A is a upper triangular matrix.*)
+(*Solving A*X = B when A is a upper triangular matrix. A assumed to be square.*)
 (* If there is no solution, it returns false and some vector. Otherwise, true and the solution.*)
 
-let rec solve_triangular aa bb = match Array.length aa with
-|1 ->
-if aa.(0).(0) = 0. then
-  begin
-    if bb.(0) <> 0. then (false, bb) else (true, [|0.|])
-  end
-else (true, [| bb.(0) /. aa.(0).(0)|])
-|n when (aa.(n-1).(n-1) = 0.)&&(bb.(n-1) <> 0.) -> (false, bb)
-|n when aa.(n-1).(n-1) = 0. ->
-let bb_1 = Array.make (n-1) 0. in
-  for k = 0 to (n-2) do
-    bb_1.(k) <- bb.(k)
-  done ;
-let aa_1 = Array.make_matrix (n-1) (n-1) 0. in
-  for a = 0 to n-2 do
-    for b = 0 to n-2 do
-    aa_1.(a).(b) <- aa.(a).(b)
-    done ;
-  done ;
-let (bool, xx_1) = solve_triangular aa_1 bb_1 in 
-let xx = Array.make n 0. in
-  for k = 0 to n-2 do
-    xx.(k) <- xx_1.(k)
-  done ;
-(bool, xx)
-|n ->
-let y = bb.(n-1) /. aa.(n-1).(n-1) in
-let bb_1 = Array.make (n-1) 0. in
-  for k = 0 to (n-2) do
-    bb_1.(k) <- bb.(k) -. y *. aa.(n-1).(k)
-  done ;
-let aa_1 = Array.make_matrix (n-1) (n-1) 0. in
-  for a = 0 to n-2 do
-    for b = 0 to n-2 do
-      aa_1.(a).(b) <- aa.(a).(b)
-    done ;
-  done ;
-let bool, xx_1 = solve_triangular aa_1 bb_1 in 
-let xx = Array.make n y in
-  for k = 0 to n-2 do
-    xx.(k) <- xx_1.(k)
-  done ;
-(bool, xx)
+let rec solve_triangular aa bb =
+	match Array.length aa with
+	|0 -> (true, [||]);
+  |1 -> if aa.(0).(0) = 0. then
+          begin
+            if bb.(0) <> 0. then (false, bb) else (true, [|0.|])
+          end
+        else (true, [| bb.(0) /. aa.(0).(0)|])
+  |n when (aa.(n-1).(n-1) = 0.)&&(bb.(n-1) <> 0.) -> (false, bb)
+  |n when aa.(n-1).(n-1) = 0. -> let bb_1 = Array.make (n-1) 0. in
+                                 for k = 0 to (n-2) do
+                                   bb_1.(k) <- bb.(k)
+                                 done ;
+                                 let aa_1 = Array.make_matrix (n-1) (n-1) 0. in
+                                 for a = 0 to n-2 do
+                                   for b = 0 to n-2 do
+                                     aa_1.(a).(b) <- aa.(a).(b)
+                                   done ;
+                                 done ;
+                                 let (bool, xx_1) = solve_triangular aa_1 bb_1 in 
+                                 let xx = Array.make n 0. in
+                                 for k = 0 to n-2 do
+                                   xx.(k) <- xx_1.(k)
+                                 done ;
+                                   (bool, xx)
+  |n -> let y = bb.(n-1) /. aa.(n-1).(n-1) in
+        let bb_1 = Array.make (n-1) 0. in
+        for k = 0 to (n-2) do
+          bb_1.(k) <- bb.(k) -. y *. aa.(n-1).(k)
+        done ;
+        let aa_1 = Array.make_matrix (n-1) (n-1) 0. in
+        for a = 0 to n-2 do
+          for b = 0 to n-2 do
+            aa_1.(a).(b) <- aa.(a).(b)
+          done ;
+        done ;
+        let bool, xx_1 = solve_triangular aa_1 bb_1 in 
+        let xx = Array.make n 0. in
+        for k = 0 to n-2 do
+          xx.(k) <- xx_1.(k)
+        done ;
+				xx.(n-1) <- y;
+        (bool, xx)
 ;;
 
+(*Solving A*X = B in the general case. A assumed to be square.*)
+(* If there is no solution, it returns false and some vector. Otherwise, true and the solution.*)
 let solve_gaussian_pivot aa bb =
-let rec aux matrix_a matrix_b n = match n with
-|n when n = Array.length matrix_a -> solve_triangular matrix_a matrix_b
-|n ->
-let p = Array.length matrix_a in
-let pivot = ref p in
-for i = p-1 downto n do
- if matrix_a.(n).(i) <> 0. then pivot := i
-done ;
-match !pivot with
-|x when x=p -> aux matrix_a matrix_b (n+1)
-|_ ->
-  line_switch matrix_a matrix_b !pivot n ;
-    for j = n+1 to p-1 do
-      elementary_operation matrix_a matrix_b n j (matrix_a.(n).(j)/.matrix_a.(n).(n))
-    done ;
-aux matrix_a matrix_b (n+1)
-in aux aa bb 0
+  let rec aux matrix_a matrix_b n = match n with
+    |n when n = Array.length matrix_a -> solve_triangular matrix_a matrix_b
+    |n -> let p = Array.length matrix_a in
+          let pivot = ref p in
+          for i = p-1 downto n do
+            if matrix_a.(n).(i) <> 0. then pivot := i
+          done ;
+          match !pivot with
+            |x when x=p -> aux matrix_a matrix_b (n+1)
+            |_ -> line_switch matrix_a matrix_b !pivot n ;
+                  for j = n+1 to p-1 do
+                    elementary_operation matrix_a matrix_b n j (matrix_a.(n).(j)/.matrix_a.(n).(n))
+                  done ;
+                  aux matrix_a matrix_b (n+1)
+  in aux aa bb 0
 ;;
