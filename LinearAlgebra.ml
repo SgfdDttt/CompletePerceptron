@@ -12,7 +12,23 @@ u ;;
 (*print an array - that's not algebra but still useful*) 
 let print_array a =
   let print_with_semicolon x = print_float x; print_string "; ";
-	in Array.iter (print_with_semicolon) a; print_string "\n";
+	in Array.iter (print_with_semicolon) a;
+;;
+
+(*print weights and margin - that's not algebra but still useful*) 
+let print_weight_and_margin weights margin prefix =
+	print_string prefix; print_string "weights:\n    ";
+	print_string prefix; print_array weights; print_string "\n";
+	print_string prefix; print_string "margin:\n    ";
+	print_string prefix; print_float margin;
+;;
+
+(*print convex_coefficients and module - that's not algebra but still useful*) 
+let print_coefficients_and_module weights margin prefix =
+	print_string prefix; print_string "convex coefficients:\n    ";
+	print_string prefix; print_array weights; print_string "\n";
+	print_string prefix; print_string "module:\n    ";
+	print_string prefix; print_float margin;
 ;;
 
 (*add vector b to vector a, in place*)
@@ -31,12 +47,13 @@ let n = Array.length a - 1 in
 
 (*scalar product of vectors a and b*)
 let scal a b =
-let length = min (Array.length b) (Array.length a) in
-let result = ref 0. in
-for k = 0 to length-1 do
-result := !result +. (a.(k))*.(b.(k))
-done;
-!result;;
+  let length = min (Array.length b) (Array.length a) in
+  let result = ref 0. in
+  for k = 0 to length-1 do
+    result := !result +. (a.(k))*.(b.(k))
+  done;
+  !result;
+;;
 
 (*normalisation of vector x, in place*)
 let normalisation x =
@@ -72,26 +89,35 @@ let j = mini_scal tt w and module_w = sqrt(scal w w) in (scal tt.(j) w)/.module_
 
 (*matrix multiplication*)
 let matrix_mult tt x =
-let p = min (Array.length tt) (Array.length x) and n = Array.length tt.(0) in
-let result = Array.make n 0. in
-  for kk = 0 to n-1 do
-    let c = ref 0. in
-      for ii = 0 to p-1 do
-        c := !c +. tt.(ii).(kk) *. x.(ii)
-      done ;
-    result.(kk) <- !c ;
-  done ;
-result ;;
+  let p = min (Array.length tt) (Array.length x) in
+	match p with
+	| 0 -> [||];
+	|_ -> let n = Array.length tt.(0) in
+        let result = Array.make n 0. in
+        for kk = 0 to n-1 do
+          let c = ref 0. in
+          for ii = 0 to p-1 do
+            c := !c +. tt.(ii).(kk) *. x.(ii)
+          done ;
+          result.(kk) <- !c ;
+        done ;
+        result;
+;;
 
-(*making i-th canonical base vector of same size as the columns of tt, with a 1 at i-th index and 0 elsewhere*)
+(*making i-th canonical base vector of length the number of columns that tt has, with a 1 at i-th index and 0 elsewhere*)
 let base tt i =
-	let n = Array.length tt.(0) in
-let v = Array.make n 0. in
-v.(i) <- 1. ; v ;;
+	let n = Array.length tt in
+  let v = Array.make n 0. in
+  v.(i) <- 1. ;
+  v;
+;;
 
 (*bilinear product of x and e_i (i-th base vector) based on tt: (tt x|tt e_i)*)
 
-let bilin_prod tt x i = scal (matrix_mult tt x) tt.(i) ;;
+let bilin_prod tt x i =
+	let mat = matrix_mult tt x in
+  scal mat tt.(i);
+;;
 
 (*quadratic bilinear product of tt and x: (tt x | tt x)*)
 
@@ -194,4 +220,49 @@ let solve_gaussian_pivot aa bb =
                   done ;
                   aux matrix_a matrix_b (n+1)
   in aux aa bb 0
+;;
+
+(*Preprocessing the data*)
+
+(*changes c_i into y_i*c_i*)
+let g v =
+  let n = Array.length v in
+    for k=0 to n-2 do
+	    v.(k) <- v.(k)*.v.(n-1);
+    done;
+;;
+
+(*changes all c_i into y_i*c_i*)
+let treat tt =
+  let n = Array.length tt in
+    for k = 0 to n-1 do
+      g tt.(k)
+    done;
+;;
+
+let vector_normalisation v =
+  let n = Array.length v in
+  let denominator = ref 0. in
+  for k = 0 to n-1 do
+    denominator := !denominator +. v.(k) *. v.(k)
+  done ;
+  denominator := sqrt(!denominator) ;
+  for k = 0 to n-1 do
+    v.(k) <- v.(k) /. !denominator
+  done ;
+;;
+
+let data_normalisation tt =
+let p = Array.length tt in
+let n = Array.length tt.(0) in
+let normalized = Array.make_matrix p n 0. in
+  for k = 0 to p-1 do
+    vector_normalisation tt.(k);
+  done;
+normalized;
+;;
+
+let data_preprocessing tt =
+	treat tt;
+	data_normalisation tt;
 ;;

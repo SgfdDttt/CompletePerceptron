@@ -1,134 +1,12 @@
-(*Copie conforme d'un tableau*)
+open LinearAlgebra
+open AdvancedPerceptron
+open VonNeumann
+open PalRujanPerceptron
 
-let copie t =
-let n = Array.length t in
-let u = Array.make n t.(0) in
-  for k = 0 to n-1 do
-    u.(k) <- t.(k)
-  done ;
-u ;;
-
-(*Addition en place du vecteur b au vecteur a*)
-let add a b =
-let n = Array.length a in
-for k = 0 to n-1 do
-a.(k) <- a.(k) +. b.(k)
-done;;
-
-(*Produit scalaire canonique de a et b*)
-
-let scal a b =
-let bigN = Array.length b in
-let s = ref 0. in
-for k = 0 to bigN-1 do
-s:= !s +. (a.(k))*.(b.(k))
-done;
-!s;;
-
-(*bigNormalisation du vecteur x*)
-
-let normalisation x =
-let bigN = Array.length x in
-let s = ref 0. in
-for k = 0 to bigN-1 do
-s:= !s +. (x.(k))*.(x.(k))
-done;
-s := sqrt (!s) ;
-for k = 0 to bigN-1 do
-x.(k) <- x.(k)/.(!s)
-done ;;
-
-(*bigTeste si u est le vecteur nul*)
-
-let test_nul u =
-let n = Array.length u - 1 in
-let bool = ref true in
-for k = 0 to n do
-bool := (!bool)&&(u.(k) = 0.)
-done ;
-!bool;;
-
-(*bigT.(k) désigne la kieme colonne de bigT. Recherche du plus petit produit scalaire*)
-
-let miniscal bigT w =
-let p = Array.length bigT - 1 in
-let k = ref 0 in
-for i = 0 to p do
-if scal bigT.(i) w < scal bigT.(!k) w then k:=i done;
-!k ;;
-
-(*Marge d'un vecteur*)
-
-let marge bigT w =
-let j = miniscal bigT w and bigN = sqrt(scal w w) in (scal bigT.(j) w)/.bigN ;;
-
-(*Cet algorithme renvoie le résultat de n itérations du perceptron avec la marge obtenue, en gardant en mémoire la meilleure solution rencontrée jusque là. Si le vecteur solution passe par 0, c'est inclassifiable d'après Gordan.*)
-
-let perceptron_avance bigT n =
-  let rec aux y a bigT x n = match n with
-  |0 -> (y, a)
-  |n ->
-      let j = miniscal bigT x in
-      add x bigT.(j) ;
-      if test_nul x
-      then raise (Failure "inclassifiable")
-      else
-      begin
-      if a < marge bigT x
-      then let z = copie x in normalisation z ; aux z (marge bigT z) bigT x (n-1) else aux y a bigT x (n-1)
-      end ;
-in let bigN = Array.length bigT.(0) in
-let w = Array.make bigN 0. in
-w.(0) <- 1. ; aux w (marge bigT w) bigT w n ;;
-
-
-
-
-
-
-(*traitement des donnees*)
-
-let f v =
-let n = Array.length v in
-let u = Array.make n 0. in
-  for k= 0 to n-1 do
-    u.(k) = v.(k)
-  done ;
-let s = ref 0. in
-  for k = 0 to n-1 do
-    s := !s +. u.(k) *. u.(k)
-  done ;
-s := sqrt(!s) ;
-for k = 0 to n-1 do
-  u.(k) = u.(k) /. !s
-done ;
-u ;;
-
-let normalisation_donnees bigA =
-let p = Array.length bigA in
-let n = Array.length bigA.(0) in
-let bigB = Array.make_matrix p n 0. in
-  for k = 0 to p-1 do
-    bigB.(k) = f bigA.(k)
-  done ;
-bigB;;
-
-(*Donnees pretraitees*)
-
-let g v = match v.(4) with
-| 1. -> ()
-| -1. -> for k = 0 to 3 do
-           v.(k) = -.v.(k)
-         done ;;
-
-let treat bigT =
-let n = Array.length bigT in
-  for k = 0 to n-1 do
-    g bigT.(k)
-  done ;;
-
-let bigT =
-[| [|5.1;3.5;1.4;0.2;1.|];
+(*The data: Setosa and Versicolor, from UCI Machine Learning Repository.*)
+(*The coefficients 1 to 4 are the features, the 5-th coefficient is the label.*) 
+let data = [|
+[|5.1;3.5;1.4;0.2;1.|];
 [|4.9;3.0;1.4;0.2;1.|];
 [|4.7;3.2;1.3;0.2;1.|];
 [|4.6;3.1;1.5;0.2;1.|];
@@ -227,19 +105,52 @@ let bigT =
 [|5.7;2.9;4.2;1.3;-1.|];
 [|6.2;2.9;4.3;1.3;-1.|];
 [|5.1;2.5;3.0;1.1;-1.|];
-[|5.7;2.8;4.1;1.3;-1.|] |] ;;
+[|5.7;2.8;4.1;1.3;-1.|]
+|] ;;
 
-treat bigT ;;
-let bigA = normalisation_donnees bigT ;;
+data_preprocessing data ;;
 
-let w,a = perceptron_avance bigA 10 ;;
-print_string "perceptron 10\n";;
-print_float a;;
-print_string "\n";;
-print_string "[| ";;
-for ii = 0 to Array.length w - 1 do
-print_float w.(ii);
-print_string " ; ";
-done;
-print_string "|]\n";;
+print_string "===== ADVANCED PERCEPTRON =====\n";
 
+let (weights, margin) = advanced_perceptron data 1 in
+print_string "advanced perceptron, 1 iteration:\n";
+print_weight_and_margin weights margin "    "; print_string "\n";
+
+let (weights, margin) = advanced_perceptron data 10 in
+print_string "advanced perceptron, 10 iterations:\n";
+print_weight_and_margin weights margin "    "; print_string "\n";
+
+let (weights, margin) = advanced_perceptron data 100 in
+print_string "advanced perceptron, 100 iterations:\n";
+print_weight_and_margin weights margin "    "; print_string "\n";
+
+print_string "===== VON NEUMANN ALGORITHM =====\n";
+
+let (weights, margin) = von_neumann_algorithm data 1 in
+print_string "von_neumann_algorithm, 1 iteration:\n";
+print_coefficients_and_module weights margin "    "; print_string "\n";
+
+let (weights, margin) = von_neumann_algorithm data 10 in
+print_string "von_neumann_algorithm, 10 iterations:\n";
+print_coefficients_and_module weights margin "    "; print_string "\n";
+
+
+let (weights, margin) = von_neumann_algorithm data 100 in
+print_string "von_neumann_algorithm, 100 iterations:\n";
+print_coefficients_and_module weights margin "    "; print_string "\n";
+
+print_string "===== PAL RUJAN ALGORITHM =====\n";
+
+let (weights, margin, iterations) = pal_rujan_algorithm data in
+print_string "finished in "; print_int iterations; print_string " iterations.\n";
+if (margin = 0.) then
+	begin
+	  print_string "no solution to perceptron problem.\n";
+	  print_coefficients_and_module weights margin "    "; print_string "\n";
+	end
+else
+	begin
+	  print_string "solution to perceptron problem:\n";
+	  print_weight_and_margin weights margin "    "; print_string "\n";
+	end;
+;;

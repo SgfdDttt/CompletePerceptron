@@ -7,28 +7,22 @@ open LinearAlgebra;;
 
 let advanced_perceptron tt n =
   let rec aux best_weight_vector best_margin tt current_weight_vector remaining_iterations = match remaining_iterations with
-  |0 -> normalisation best_weight_vector; (best_weight_vector, best_margin)
-  |n ->
-      let j = mini_scal tt current_weight_vector in
-      add current_weight_vector tt.(j) ;
-      if all_zero current_weight_vector
-      then raise (Failure "No solution")
-      else
-      begin
-      if best_margin < margin tt current_weight_vector
-      then let new_best = copy current_weight_vector in
-			         normalisation current_weight_vector ;
-	             aux new_best (margin tt new_best) tt current_weight_vector (remaining_iterations-1);
-		  else aux best_weight_vector best_margin tt current_weight_vector (remaining_iterations-1)
-   end ;
-	in
-	let w = Array.make (Array.length tt.(0)) 1. in
+    |0 -> begin
+			      if all_zero current_weight_vector then
+							begin
+							  print_string "NO SOLUTION;";
+							end;
+							normalisation best_weight_vector; (best_weight_vector, best_margin)
+          end;    
+		|n -> let j = mini_scal tt current_weight_vector in
+          add current_weight_vector tt.(j) ;       
+              if best_margin < margin tt current_weight_vector then
+								let new_best = copy current_weight_vector in
+			          normalisation current_weight_vector ;
+	              aux new_best (margin tt new_best) tt current_weight_vector (remaining_iterations-1);
+		          else
+							  aux best_weight_vector best_margin tt current_weight_vector (remaining_iterations-1);
+	in let w = Array.make (Array.length tt.(0)) 1. in
   normalisation w;
-  aux w (margin tt w) tt w n;;
-
-let tt = [|[| -1. ; 1. ; 1.|] ; [|1. ; -1. ; -1.|]|] in let w, a = advanced_perceptron tt 5 in print_float a; print_string "\n";
-for kk=0 to Array.length w - 1 do
-	print_float w.(kk);
-	print_string " ; ";
-done;
+  aux w (margin tt w) tt w n;
 ;;

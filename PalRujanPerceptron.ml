@@ -12,15 +12,15 @@ let rec presence x l = match l with
 (*Within the columns of tt, looks for a vector whose scalar product with x is the smallest.*)
 (*If that scalar product is smaller than alpha (the margin), it returns the number of that vector (and not the index of the column in tt), otherwise it returns 0*)
 let smaller_scalar_product x alpha tt =
-let p = Array.length tt in
-let k = ref 0 in
-  for i = 1 to p do
-    if scal x tt.(i-1) < alpha
-    then match !k with
-    |0 -> k := i
-    |n -> if scal x tt.(i-1) < scal x tt.(n-1) then k := i ;
-  done ;
-!k ;;
+  let p = Array.length tt in
+  let k = ref 0 in
+    for i = 1 to p do
+      if scal x tt.(i-1) < alpha
+      then match !k with
+        |0 -> k := i
+        |n -> if scal x tt.(i-1) < scal x tt.(n-1) then k := i ;
+    done ;
+  !k ;;
 
 (*Computing A_m.(0). This algorithm is useful in practice.*)
 let updating_cardinal aa =
