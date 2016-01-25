@@ -3,7 +3,7 @@ open AdvancedPerceptron
 open VonNeumann
 open PalRujanPerceptron
 
-(*The data: Setosa and Virginica, from UCI Machine Learning Repository.*)
+(*The data: Setosa and Virginica, from UCI Machine Learning Repository (http://archive.ics.uci.edu/ml/datasets/Iris).*)
 (*The coefficients 1 to 4 are the features, the 5-th coefficient is the label.*)
 let data = [|
 [|5.1;3.5;1.4;0.2;1.|];

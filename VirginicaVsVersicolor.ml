@@ -3,7 +3,7 @@ open AdvancedPerceptron
 open VonNeumann
 open PalRujanPerceptron
 
-(*The data: Virginica and Versicolor, from UCI Machine Learning Repository.*)
+(*The data: Virginica and Versicolor, from UCI Machine Learning Repository (http://archive.ics.uci.edu/ml/datasets/Iris).*)
 (*The coefficients 1 to 4 are the features, the 5-th coefficient is the label.*)
 let data = [|
 [|7.0;3.2;4.7;1.4;1.|];
