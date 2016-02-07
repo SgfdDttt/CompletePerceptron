@@ -1,6 +1,4 @@
 # object files
-*.o
-*.cm*
-setosa_vs_virginica
-setosa_vs_versicolor
-virginica_vs_versicolor
+src/*.o
+src/*.cm*
+egs/*
