@@ -7,10 +7,10 @@ An OCaml implementation of the classic Perceptron algorithm and its counterpart 
 **PerceptronGist.pdf** is a summary in English containing the algorithms and important theorems.
 
 ### Running the algorithms
-This repository contains a demo of the 3 algorithmes on the Iris Data Set from the UCI Machine Learning repository (https://archive.ics.uci.edu/ml/datasets/Iris/). You need ocaml to run compile the .ml files.
+This repository contains a demo of the 3 algorithms on the Iris Data Set from the UCI Machine Learning repository (https://archive.ics.uci.edu/ml/datasets/Iris/). You need Ocaml to compile the .ml files.
 
 1. Run compile.sh.
 
-2. Run egs/xxx_vs_yyy to run all 3 algorithms on the given set of data, attempting to separate xxx from yyy. Results will be printed to the console.
+2. Run egs/xxx_vs_yyy to run all 3 algorithms on the given set of data, attempting to separate iris xxx from iris yyy. Results will be printed to the console.
 
 To run the algorithms on your own data, have a look at the XxxVsYyy.ml files and change the appropriate parts. You will need to write an interface to read your data.
